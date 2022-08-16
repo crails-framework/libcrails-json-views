@@ -1,0 +1,6 @@
+$out_root/
+{
+  include libcrails-json-views/
+}
+
+export $out_root/libcrails-json-views/$import.target

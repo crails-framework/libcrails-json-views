@@ -1,0 +1,12 @@
+: 1
+name: libcrails-json-views
+version: 2.0.0
+summary: crails-json-views C++ library
+license: BSD-C3
+description-file: README.md
+url: https://github.com/crails-framework/libcrails-json-views
+email: michael@unetresgrossebite.com
+#build-error-email: michael@unetresgrossebite.com
+depends: * build2 >= 0.15.0
+depends: * bpkg >= 0.15.0
+depends: { libcrails libcrails-templates } ^2.0.0
