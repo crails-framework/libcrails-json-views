@@ -1,7 +1,8 @@
 intf_libs = # Interface dependencies.
 impl_libs = # Implementation dependencies.
-import intf_libs += libcrails%lib{crails}
+import intf_libs += libdatatree%lib{datatree}
 import intf_libs += libcrails-templates%lib{crails-templates}
+import intf_libs += libcrails-semantics%lib{crails-semantics}
 
 lib{crails-json-views}: {hxx ixx txx cxx}{**} $impl_libs $intf_libs
 
