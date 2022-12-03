@@ -13,8 +13,8 @@ namespace Crails
   class JsonTemplate : public Template
   {
   public:
-    JsonTemplate(const Renderer* renderer, SharedVars& vars) :
-      Template(renderer, vars),
+    JsonTemplate(const Renderer& renderer, RenderTarget& target, SharedVars& vars) :
+      Template(renderer, target, vars),
       first_item_in_object(true)
     {
     }
