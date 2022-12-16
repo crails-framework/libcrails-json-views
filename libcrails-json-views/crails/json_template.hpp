@@ -85,7 +85,8 @@ namespace Crails
                     ITERATOR end,
                     std::function<void (T)> func)
     {
-      add_value_with_key(key, std::bind(&JsonTemplate::json_array<ITERATOR, T>, this, beg, end, func));
+      add_value_with_key(key, [&]() { json_array<ITERATOR, T>(beg, end, func); });
+                              //std::bind(&JsonTemplate::json_array<ITERATOR, T>, this, beg, end, func));
     }
 
     template<typename ITERATOR>
@@ -153,7 +154,8 @@ namespace Crails
     template<typename MAP>
     void json_map(const std::string& key, const MAP& map)
     {
-      add_value_with_key(key, std::bind(&JsonTemplate::json_map<MAP>, this, map));
+      add_value_with_key(key, [&]() { json_map<MAP>(map); });
+                            //std::bind(&JsonTemplate::json_map<MAP>, this, map));
     }
 
     template<typename MAP>
