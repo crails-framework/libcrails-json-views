@@ -27,30 +27,56 @@ namespace Crails
       add_value(val);
     }
 
+    void json(std::function<void()> object);
+
     //
     // BEGIN ARRAYS
     //
     template<typename ARRAY>
+    void json_array(ARRAY& array) { json_array(array.begin(), array.end()); }
+
+    template<typename ARRAY, typename T = typename ARRAY::value_type>
+    void json_array(ARRAY& array, std::function<void(T)> func)
+    {
+      json_array<ARRAY, T>(array.begin(), array.end(), func);
+    }
+
+    template<typename ITERATOR>
+    void json_array(ITERATOR beg, ITERATOR end)
+    {
+      add_array<ITERATOR>(beg, end, [this](ITERATOR iterator) { add_value(*iterator); });
+    }
+
+    template<typename ITERATOR, typename T>
+    void json_array(ITERATOR beg, ITERATOR end, std::function<void (T)> func)
+    {
+      add_array<ITERATOR>(beg, end, [&](ITERATOR iterator)
+      {
+        add_object([this, func, iterator]() { func(*iterator); });
+      });
+    }
+
+    template<typename ITERATOR>
+    void json_array(ITERATOR beg, ITERATOR end, const std::string& partial_view, std::string var_key = "")
+    {
+      add_array<ITERATOR>(beg, end, [&](ITERATOR iterator)
+      {
+        partial(partial_view, {{var_key, &(*iterator)}});
+      });
+    }
+
+    void json_array(Data value);
+
+    template<typename ARRAY>
     void json_array(const std::string& key, ARRAY& array) { json_array(key, array.begin(), array.end()); }
 
-    template<typename ARRAY, typename T>
+    template<typename ARRAY, typename T = typename ARRAY::value_type>
     void json_array(const std::string& key, ARRAY& array, std::function<void (T)> func) { json_array(key, array.begin(), array.end(), func); }
 
     template<typename ITERATOR>
     void json_array(const std::string& key, ITERATOR beg, ITERATOR end)
     {
-      add_separator();
-      add_key(key);
-      first_item_in_object = true;
-      stream << '[';
-      while (beg != end)
-      {
-        add_separator();
-        add_value(*beg);
-        ++beg;
-      }
-      stream << ']';
-      first_item_in_object = false;
+      add_value_with_key(key, std::bind(&JsonTemplate::json_array<ITERATOR>, this, beg, end));
     }
 
     template<typename ITERATOR, typename T>
@@ -59,18 +85,7 @@ namespace Crails
                     ITERATOR end,
                     std::function<void (T)> func)
     {
-      add_separator();
-      add_key(key);
-      first_item_in_object = true;
-      stream << '[';
-      while (beg != end)
-      {
-        add_separator();
-        add_object([this, func, beg]() { func(*beg); });
-        ++beg;
-      }
-      stream << ']';
-      first_item_in_object = false;
+      add_value_with_key(key, std::bind(&JsonTemplate::json_array<ITERATOR, T>, this, beg, end, func));
     }
 
     template<typename ITERATOR>
@@ -82,18 +97,7 @@ namespace Crails
     {
       if (var_key == "")
         var_key = singularize(key);
-      add_separator();
-      add_key(key);
-      first_item_in_object = true;
-      stream << '[';
-      while (beg != end)
-      {
-        add_separator();
-        partial(partial_view, { {var_key, &(*beg)} });
-        ++beg;
-      }
-      stream << ']';
-      first_item_in_object = false;
+      add_value_with_key(key, std::bind(&JsonTemplate::json_array<ITERATOR>, this, beg, end, partial_view, var_key));
     }
 
     void json_array(const std::string& key, Data value);
@@ -105,11 +109,8 @@ namespace Crails
     // BEGIN MAPS
     //
     template<typename MAP>
-    void json_map(const std::string& key, const MAP& map)
+    void json_map(const MAP& map)
     {
-      add_separator();
-      add_key(key);
-      first_item_in_object = true;
       stream << '{';
       for (auto item : map)
       {
@@ -118,15 +119,11 @@ namespace Crails
         add_value(item.second);
       }
       stream << '}';
-      first_item_in_object = false;
     }
 
     template<typename MAP>
-    void json_map(const std::string& key, const MAP& map, std::function<void (typename MAP::mapped_type)> functor, bool use_braces = true)
+    void json_map(const MAP& map, std::function<void (typename MAP::mapped_type)> functor, bool use_braces = true)
     {
-      add_separator();
-      add_key(key);
-      first_item_in_object = true;
       stream << '{';
       for (auto item : map)
       {
@@ -138,17 +135,11 @@ namespace Crails
           functor(item.second);
       }
       stream << '}';
-      first_item_in_object = false;
     }
 
     template<typename MAP>
-    void json_map(const std::string& key, const MAP& map, const std::string& partial_view, std::string& var_key)
+    void json_map(const MAP& map, const std::string& partial_view, std::string& var_key)
     {
-      if (var_key == "")
-        var_key = singularize(key);
-      add_separator();
-      add_key(key);
-      first_item_in_object = true;
       stream << '{';
       for (auto item : map)
       {
@@ -157,7 +148,26 @@ namespace Crails
         partial(partial_view, { {var_key, &(item.second)} });
       }
       stream << '}';
-      first_item_in_object = false;
+    }
+
+    template<typename MAP>
+    void json_map(const std::string& key, const MAP& map)
+    {
+      add_value_with_key(key, std::bind(&JsonTemplate::json_map<MAP>, this, map));
+    }
+
+    template<typename MAP>
+    void json_map(const std::string& key, const MAP& map, std::function<void (typename MAP::mapped_type)> functor, bool use_braces = true)
+    {
+      add_value_with_key(key, std::bind(&JsonTemplate::json_map<MAP>, this, map, functor, use_braces));
+    }
+
+    template<typename MAP>
+    void json_map(const std::string& key, const MAP& map, const std::string& partial_view, std::string var_key = "")
+    {
+      if (var_key == "")
+        var_key = singularize(key);
+      add_value_with_key(key, std::bind(&JsonTemplate::json_map<MAP>, this, map, partial_view, var_key));
     }
     //
     // END MAPS
@@ -169,6 +179,7 @@ namespace Crails
 
   protected:
     std::stringstream stream;
+
   private:
     template<typename T>
     void        add_value(const T val)
@@ -176,6 +187,20 @@ namespace Crails
       stream << val;
     }
 
+    template<typename ITERATOR>
+    void        add_array(ITERATOR beg, ITERATOR end, std::function<void(ITERATOR)> renderer)
+    {
+      stream << '[';
+      while (beg != end)
+      {
+        add_separator();
+        renderer(beg);
+        ++beg;
+      }
+      stream << ']';
+    }
+
+    void        add_value_with_key(const std::string& key, std::function<void()> callback);
     void        add_separator();
     void        add_key(const std::string& key);
     void        add_key(unsigned long number);

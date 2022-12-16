@@ -3,6 +3,22 @@
 
 using namespace Crails;
 
+void JsonTemplate::json(std::function<void()> object)
+{
+  stream << '{';
+  object();
+  stream << '}';
+}
+
+void JsonTemplate::add_value_with_key(const std::string& key, std::function<void()> callback)
+{
+  add_separator();
+  add_key(key);
+  first_item_in_object = true;
+  callback();
+  first_item_in_object = false;
+}
+
 void JsonTemplate::inline_partial(const std::string& view, SharedVars vars)
 {
   std::string str = Template::partial(view, vars);
@@ -28,12 +44,9 @@ void JsonTemplate::partial(const std::string& view, SharedVars vars)
   stream << Template::partial(view, vars);
 }
 
-void JsonTemplate::json_array(const std::string& key, Data value)
+void JsonTemplate::json_array(Data value)
 {
-  add_separator();
-  add_key(key);
   stream << '[';
-  first_item_in_object = true;
   value.each([this](Data item) -> bool
   {
     if (first_item_in_object == false)
@@ -43,7 +56,11 @@ void JsonTemplate::json_array(const std::string& key, Data value)
     return true;
   });
   stream << ']';
-  first_item_in_object = false;
+}
+
+void JsonTemplate::json_array(const std::string& key, Data value)
+{
+  add_value_with_key(key, [this, value]() { json_array(value); });
 }
 
 std::string JsonTemplate::javascript_escape(const std::string& input) const
