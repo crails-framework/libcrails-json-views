@@ -1,4 +1,4 @@
-#include "json_renderer.hpp"
+#include "json.hpp"
 
 using namespace Crails;
 
