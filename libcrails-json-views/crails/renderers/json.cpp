@@ -2,12 +2,12 @@
 
 using namespace Crails;
 
-bool JsonRenderer::can_render(const std::string& accept_header, const std::string& view) const
+const std::vector<std::string>& JsonRenderer::get_mimetypes() const
 {
-  if (accept_header.find("/json") != std::string::npos
-   || accept_header.find("*/*")   != std::string::npos)
-    return templates.find(view) != templates.end();
-  return false;
+  static const std::vector<std::string> mimetypes{
+    "application/json", "text/json", "application/feed+json"
+  };
+  return mimetypes;
 }
 
 void JsonRenderer::render_template(const std::string& view, RenderTarget& target, SharedVars& vars) const
