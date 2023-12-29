@@ -78,7 +78,8 @@ namespace Crails
     template<typename ITERATOR>
     void json_array(const std::string& key, ITERATOR beg, ITERATOR end)
     {
-      add_value_with_key(key, std::bind(&JsonTemplate::json_array<ITERATOR>, this, beg, end));
+      add_value_with_key(key, [&]() { json_array<ITERATOR>(beg, end); });
+                              //std::bind(&JsonTemplate::json_array<ITERATOR>, this, beg, end));
     }
 
     template<typename ITERATOR, typename T>
@@ -100,7 +101,8 @@ namespace Crails
     {
       if (var_key == "")
         var_key = singularize(key);
-      add_value_with_key(key, std::bind(&JsonTemplate::json_array<ITERATOR>, this, beg, end, partial_view, var_key));
+      add_value_with_key(key, [&]() { json_array<ITERATOR>(beg, end, partial_view, var_key); });
+                              //std::bind(&JsonTemplate::json_array<ITERATOR>, this, beg, end, partial_view, var_key));
     }
 
     void json_array(const std::string& key, Data value);
