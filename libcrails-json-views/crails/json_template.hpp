@@ -12,6 +12,8 @@ namespace Crails
 {
   class JsonTemplate : public Template
   {
+  protected:
+    std::string apply_post_render_filters(const std::string&) override;
   public:
     JsonTemplate(const Renderer& renderer, RenderTarget& target, SharedVars& vars) :
       Template(renderer, target, vars),

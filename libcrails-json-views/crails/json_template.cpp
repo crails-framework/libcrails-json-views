@@ -10,6 +10,19 @@ void JsonTemplate::json(std::function<void()> object)
   stream << '}';
 }
 
+std::string JsonTemplate::apply_post_render_filters(const std::string& data)
+{
+  if (data[0] != '{' && data[0] != '[') {
+    auto pos_comma = data.find(',');
+    auto pos_colon = data.find(':');
+
+    if (pos_colon < 0 || (pos_comma >= 0 && pos_comma < pos_colon))
+      return '[' + data + ']';
+    return '{' + data + '}';
+  }
+  return data;
+}
+
 void JsonTemplate::add_value_with_key(const std::string& key, std::function<void()> callback)
 {
   add_separator();
