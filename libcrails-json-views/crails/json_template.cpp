@@ -10,7 +10,7 @@ void JsonTemplate::json(std::function<void()> object)
   stream << '}';
 }
 
-std::string JsonTemplate::apply_post_render_filters(const std::string& data)
+std::string JsonTemplate::apply_post_render_filters(std::string&& data)
 {
   if (data[0] != '{' && data[0] != '[') {
     auto pos_comma = data.find(',');
@@ -20,7 +20,7 @@ std::string JsonTemplate::apply_post_render_filters(const std::string& data)
       return '[' + data + ']';
     return '{' + data + '}';
   }
-  return data;
+  return std::move(data);
 }
 
 void JsonTemplate::add_value_with_key(const std::string& key, std::function<void()> callback)
@@ -60,14 +60,13 @@ void JsonTemplate::partial(const std::string& view, SharedVars vars)
 void JsonTemplate::json_array(Data value)
 {
   stream << '[';
-  value.each([this](Data item) -> bool
+  for (Data item : value)
   {
     if (first_item_in_object == false)
       stream << ',';
     stream << item.to_json();
     first_item_in_object = false;
-    return true;
-  });
+  }
   stream << ']';
 }
 
@@ -179,7 +178,7 @@ namespace Crails
   template<>
   void JsonTemplate::add_value<Data>(const Data value)
   {
-    value.output(stream);
+    stream << [value](std::ostream& ss) { value.output(ss); };
   }
 
   template<>

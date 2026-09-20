@@ -13,7 +13,7 @@ namespace Crails
   class JsonTemplate : public Template
   {
   protected:
-    std::string apply_post_render_filters(const std::string&) override;
+    std::string apply_post_render_filters(std::string&&) override;
   public:
     JsonTemplate(const Renderer& renderer, RenderTarget& target, SharedVars& vars) :
       Template(renderer, target, vars),
@@ -184,7 +184,7 @@ namespace Crails
     void inline_partial(const std::string& view, SharedVars vars = {});
 
   protected:
-    std::stringstream stream;
+    Crails::TemplateStream stream;
 
   private:
     template<typename T>

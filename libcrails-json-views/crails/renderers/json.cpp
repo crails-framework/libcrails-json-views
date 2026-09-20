@@ -10,7 +10,7 @@ const std::vector<std::string>& JsonRenderer::get_mimetypes() const
   return mimetypes;
 }
 
-void JsonRenderer::render_template(const std::string& view, RenderTarget& target, SharedVars& vars) const
+void JsonRenderer::render_template(const std::string_view view, RenderTarget& target, SharedVars& vars) const
 {
   auto tpl = templates.find(view);
 
